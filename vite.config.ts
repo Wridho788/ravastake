@@ -7,6 +7,10 @@ export default defineConfig({
   build: {
     sourcemap: true,
   },
+  optimizeDeps: {
+    // Pre-bundle up front so Vitest browser mode does not reload mid-run.
+    include: ['idb', 'react', 'react-dom', 'react-dom/client', 'react-router'],
+  },
   test: {
     projects: [
       {
