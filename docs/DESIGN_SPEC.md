@@ -28,6 +28,31 @@ Gunakan angka tabular, maksimal dua font weight utama per panel, label unit yang
 
 Detail/modal posisi harus bisa dicapai dari dashboard maupun daftar; deep link posisi dapat ditambahkan bila kontrak routing dibuat konsisten. Unknown route menampilkan 404 yang dapat kembali ke dashboard.
 
+## Mesin waktu
+
+- **Badge waktu** permanen di toolbar, selalu terlihat:
+  - offset 0: "Waktu nyata · 7 Okt 2026";
+  - offset > 0: "Waktu simulasi · 19 Des 2026 (+73 hari)".
+  
+  Offset selalu kelipatan hari penuh, jadi selisih hari selalu bilangan bulat.
+- **Kontrol waktu** di toolbar: tombol "+1 hari", "+7 hari", "+30 hari", dan form "Majukan N hari" (input angka 1–365 + tombol "Majukan"). Semua tombol nonaktif selama mutasi berjalan.
+- **Lompat ke jatuh tempo** di detail posisi aktif mengisi input N dengan sisa hari, lalu memfokuskan tombol "Majukan". Kalau posisi sudah jatuh tempo, tombol nonaktif dengan teks "Sudah jatuh tempo".
+- **Konfirmasi pertama.** Lompatan waktu pertama di setiap database (dan pertama setelah reset) menampilkan dialog yang menjelaskan bahwa waktu hanya bisa maju untuk semua posisi dan hanya reset demo yang mengembalikannya. Lompatan berikutnya langsung dijalankan.
+- **State `stale-time`:** pesan netral "Waktu simulasi berubah di tab lain atau batas hari terlewati. Periksa ulang nilai." dengan nilai yang sudah dimuat ulang.
+
+## Ledger X-ray
+
+Drawer read-only yang dibuka dari angka saldo tersedia, principal aktif (dashboard), serta Principal / Principal dikembalikan / Reward diterima (detail posisi). Isinya:
+- tabel entri ledger (jenis, delta, `operationId`, waktu simulasi);
+- baris total yang sama persis dengan angka pemicu;
+- penjelasan tanda dibalik untuk principal.
+
+Estimasi reward dan total USD ditampilkan sebagai rumus dengan angka nyata dan label "turunan". Drawer bisa ditutup dengan Escape dan mengembalikan fokus ke angka pemicu.
+
+## Buka di tab kedua
+
+Dialog aktivasi memuat tautan "Buka di tab kedua" (`target="_blank"`) ke `/positions?activate=<draftId>`. Tab baru membuka dialog aktivasi draft yang sama. Kalau satu tab mengaktifkan lebih dulu, tab lain mendapat pesan "Draft ini sudah diaktifkan di tab lain" dan daftar dimuat ulang; tidak ada aktivasi kedua.
+
 ## Responsif
 
 - Desktop >=1200px: sidebar permanen, kartu aset berjajar, panel aktif dan kalkulator dua kolom jika cukup.
@@ -37,7 +62,7 @@ Detail/modal posisi harus bisa dicapai dari dashboard maupun daftar; deep link p
 
 ## State wajib
 
-Boot/loading database; katalog kosong setelah pencarian; belum ada draft; aktif kosong; pending mutation; validasi field; saldo kurang; kegagalan commit; database upgrade blocked; data tidak dikenali; confirmation cancel; sukses committed; route tidak ditemukan.
+Boot/loading database; katalog kosong setelah pencarian; belum ada draft; aktif kosong; pending mutation; validasi field; saldo kurang; kegagalan commit; database upgrade blocked; data tidak dikenali; confirmation cancel; sukses committed; route tidak ditemukan; nilai berubah (`stale-time`/`stale-draft`); target dialog hilang karena reset di tab lain; posisi sudah jatuh tempo.
 
 ## Aksesibilitas dan perilaku
 
