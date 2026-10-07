@@ -1,0 +1,48 @@
+{
+  "name": "ravastake",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Dashboard staking crypto simulasi dengan mesin waktu dan Ledger X-ray. Sepenuhnya lokal (IndexedDB).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "build:e2e": "vite build --mode e2e --outDir dist-e2e",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:e2e": "npm run build:e2e && playwright test --config playwright.config.ts",
+    "test:production": "npm run build && node scripts/check-no-test-hooks.mjs dist && playwright test --config playwright.production.config.ts",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run test:integration && npm run test:e2e",
+    "test:deployed": "playwright test --config playwright.production.config.ts"
+  },
+  "dependencies": {
+    "idb": "^8.0.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "^7.18.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/browser-playwright": "^5.0.3",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^16.5.0",
+    "playwright": "^1.63.0",
+    "typescript": "~5.9.0",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^7.3.7",
+    "vitest": "^5.0.3"
+  }
+}
