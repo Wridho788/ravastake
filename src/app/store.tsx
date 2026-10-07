@@ -8,7 +8,13 @@ import { ensureSeeded, type Deps } from '../data/useCases';
 
 const CHANNEL_NAME = 'ravastake';
 /** Errors after which the visible data is probably outdated and must be reloaded. */
-const REFRESH_ON: ReadonlySet<DomainError['code']> = new Set(['stale-time', 'stale-draft', 'not-found', 'invalid-transition', 'insufficient-balance']);
+const REFRESH_ON: ReadonlySet<DomainError['code']> = new Set([
+  'stale-time',
+  'stale-draft',
+  'not-found',
+  'invalid-transition',
+  'insufficient-balance',
+]);
 
 type BootState =
   | { kind: 'loading' }
@@ -29,6 +35,11 @@ interface AppDataValue {
   setNotice(message: string): void;
   /** Blocking notice when another tab upgrades or blocks the database. */
   connectionWarning: string;
+  /**
+   * Recovery path for unreadable data: closes this tab's connection, deletes the local database
+   * and reloads. Only called after explicit user confirmation (never automatically).
+   */
+  deleteLocalData(): Promise<void>;
 }
 
 const AppDataContext = createContext<AppDataValue | null>(null);
@@ -40,6 +51,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [connectionWarning, setConnectionWarning] = useState('');
   const [advancePrefill, setAdvancePrefill] = useState<{ days: number; token: number } | null>(null);
   const depsRef = useRef<Deps | null>(null);
+  const closeDbRef = useRef<(() => void) | null>(null);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
   const refresh = useCallback(async () => {
@@ -55,12 +67,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    let closeDb: (() => void) | undefined;
     (async () => {
       try {
         const db = await openRavaDb(DB_NAME, {
-          onVersionChange: () =>
-            setConnectionWarning('Versi data yang lebih baru dibuka di tab lain. Muat ulang halaman ini untuk melanjutkan.'),
+          onVersionChange: () => {
+            depsRef.current = null;
+            setConnectionWarning('Versi data yang lebih baru dibuka di tab lain. Muat ulang halaman ini untuk melanjutkan.');
+          },
           onBlocked: () =>
             setConnectionWarning('Pembaruan data tertahan oleh tab RavaStake lain. Tutup tab lain lalu muat ulang.'),
         });
@@ -68,7 +81,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           db.close();
           return;
         }
-        closeDb = () => db.close();
+        closeDbRef.current = () => db.close();
         const deps: Deps = { coordinator: new TransactionCoordinator(db), realNow };
         await ensureSeeded(deps);
         depsRef.current = deps;
@@ -81,23 +94,26 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
       depsRef.current = null;
-      closeDb?.();
+      closeDbRef.current?.();
+      closeDbRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (typeof BroadcastChannel === 'undefined') return undefined;
-    const channel = new BroadcastChannel(CHANNEL_NAME);
-    channel.onmessage = () => void refresh();
-    channelRef.current = channel;
     const onFocus = () => void refresh();
     const onVisibility = () => {
       if (document.visibilityState === 'visible') void refresh();
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
+    let channel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      channel = new BroadcastChannel(CHANNEL_NAME);
+      channel.onmessage = () => void refresh();
+      channelRef.current = channel;
+    }
     return () => {
-      channel.close();
+      channel?.close();
       channelRef.current = null;
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
@@ -107,7 +123,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const mutate = useCallback(
     async <T,>(work: (deps: Deps) => Promise<T>): Promise<T> => {
       const deps = depsRef.current;
-      if (!deps) throw new DomainError('storage-unavailable', 'Penyimpanan belum siap. Tunggu sebentar lalu coba lagi.');
+      if (!deps) {
+        throw new DomainError('storage-unavailable', 'Penyimpanan tidak tersedia di tab ini. Muat ulang halaman lalu coba lagi.');
+      }
       setPending(true);
       try {
         const result = await work(deps);
@@ -129,6 +147,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setAdvancePrefill({ days, token: Date.now() });
   }, []);
 
+  const deleteLocalData = useCallback(async () => {
+    depsRef.current = null;
+    closeDbRef.current?.();
+    closeDbRef.current = null;
+    await new Promise<void>((resolve) => {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => resolve();
+      request.onblocked = () => resolve();
+    });
+    window.location.reload();
+  }, []);
+
   const value = useMemo<AppDataValue>(
     () => ({
       state,
@@ -140,8 +171,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       notice,
       setNotice,
       connectionWarning,
+      deleteLocalData,
     }),
-    [state, pending, mutate, refresh, advancePrefill, requestAdvancePrefill, notice, connectionWarning],
+    [state, pending, mutate, refresh, advancePrefill, requestAdvancePrefill, notice, connectionWarning, deleteLocalData],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
@@ -160,4 +192,12 @@ export function useSnapshot(): Snapshot {
   const { state } = useAppData();
   if (state.kind !== 'ready') throw new Error('Snapshot belum siap');
   return state.snapshot;
+}
+
+/** Dependencies for read-only queries (X-ray) on screens rendered once the app is ready. */
+// eslint-disable-next-line react-refresh/only-export-components -- hook belongs with its provider
+export function useDeps(): Deps {
+  const { state } = useAppData();
+  if (state.kind !== 'ready') throw new Error('Data belum siap');
+  return state.deps;
 }

@@ -5,15 +5,16 @@ interface DialogProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
-  /** Prevents Escape/backdrop close while a mutation is committing. */
+  /** Prevents Escape close while a mutation is committing. */
   busy?: boolean;
+  variant?: 'modal' | 'drawer';
 }
 
 /**
  * Native <dialog> shown with showModal(): the browser makes the rest of the page inert
  * and handles Escape. Focus returns to the element that opened it.
  */
-export function Dialog({ open, title, onClose, children, busy = false }: DialogProps) {
+export function Dialog({ open, title, onClose, children, busy = false, variant = 'modal' }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const returnFocusRef = useRef<Element | null>(null);
   const titleId = useId();
@@ -26,16 +27,29 @@ export function Dialog({ open, title, onClose, children, busy = false }: DialogP
       dialog.showModal();
     } else if (!open && dialog.open) {
       dialog.close();
-      if (returnFocusRef.current instanceof HTMLElement && returnFocusRef.current.isConnected) {
-        returnFocusRef.current.focus();
-      }
     }
   }, [open]);
+
+  // Restore focus when the dialog unmounts or closes.
+  useEffect(() => {
+    if (open) return undefined;
+    const target = returnFocusRef.current;
+    if (target instanceof HTMLElement && target.isConnected) target.focus();
+    return undefined;
+  }, [open]);
+
+  useEffect(
+    () => () => {
+      const target = returnFocusRef.current;
+      if (target instanceof HTMLElement && target.isConnected) target.focus();
+    },
+    [],
+  );
 
   return (
     <dialog
       ref={ref}
-      className="dialog"
+      className={`dialog ${variant === 'drawer' ? 'dialog--drawer' : ''}`}
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();

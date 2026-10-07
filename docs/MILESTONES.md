@@ -1,6 +1,6 @@
 # Milestones — RavaStake
 
-Tanggal awal: 2026-10-06. **Status saat ini: M0 dan M1 selesai (2026-10-07); berikutnya M2.** Bukti run ada di [VERIFICATION](VERIFICATION.md).
+Tanggal awal: 2026-10-06. **Status saat ini: M0, M1, dan M2 selesai (2026-10-07); berikutnya M3.** Bukti run ada di [VERIFICATION](VERIFICATION.md).
 
 Checklist implementasi hanya ditandai setelah deliverable dan bukti terkait benar-benar tersedia. Dokumen ini menjadi sumber status; Development menjelaskan cara menjalankannya.
 
@@ -32,7 +32,7 @@ Acceptance criteria tetap mengacu ke [PRD](PRD.md); tabel ini hanya menunjukkan 
 - [x] Tinjau gambar referensi Stakent; catat observasi visual dan keterbatasannya.
 - [x] Tetapkan scope simulasi, fixture deterministik, dan aturan saldo/reward.
 - [x] Revisi spesifikasi untuk mesin waktu (STK-14) dan Ledger X-ray (STK-15) setelah /office-hours dan /plan-eng-review (2026-10-07).
-- [ ] Buat mockup atau implementasi awal untuk seluruh screen/state, termasuk mobile. Dipindah ke M2: implementasi langsung menggantikan mockup.
+- [x] Buat mockup atau implementasi awal untuk seluruh screen/state, termasuk mobile (implementasi M2 menggantikan mockup).
 - [ ] Finalisasi identitas RavaStake, aset berlisensi, dan token visual terukur. Dipindah ke M2.
 
 Gate: PRD, model data, rumus, dan acceptance criteria konsisten; desain mobile/error tidak dianggap tersedia hanya dari shot desktop.
@@ -51,23 +51,23 @@ Gate: satu journey lengkap memiliki bukti unit/integration/browser sebelum mempe
 
 ## M2 — Fitur MVP
 
-- [ ] Dashboard dan detail aset dengan grafik fixture 7D/30D.
-- [ ] Search, filter, sort, watchlist, serta empty states.
-- [ ] Kalkulator dengan formula/asumsi jelas; input dan slider sinkron.
-- [ ] Draft CRUD, activation confirmation, active/closed detail, close simulation, dan tautan tab kedua.
-- [ ] UI mesin waktu lengkap dan Ledger X-ray.
-- [ ] Activity filter, error storage, duplicate-submit handling, dan reset demo.
-- [ ] Responsif 360/768/1440, keyboard, dialog focus, dan alternatif data grafik.
-- [ ] Tambahkan flow E2E saat journey terkait selesai, bukan sesudah semua fitur dibuat.
+- [x] Dashboard dan detail aset dengan grafik fixture 7D/30D.
+- [x] Search, filter, sort, watchlist, serta empty states.
+- [x] Kalkulator dengan formula/asumsi jelas; input dan slider sinkron.
+- [x] Draft CRUD, activation confirmation, active/closed detail, close simulation, dan tautan tab kedua.
+- [x] UI mesin waktu lengkap dan Ledger X-ray.
+- [x] Activity filter, error storage, duplicate-submit handling, dan reset demo.
+- [x] Responsif 360/768/1440, keyboard, dialog focus, dan alternatif data grafik.
+- [x] Flow E2E E01–E23 tersedia dan lulus di Chromium (lihat VERIFICATION).
 
 ## M3 — Release candidate
 
-- [ ] Typecheck, lint, unit, dan browser integration IndexedDB lulus.
-- [ ] Semua P0 lokal pada E2E_TEST_PLAN lulus, termasuk reload, concurrent tabs, fault rollback, dan reset. STK-E20 tahap production-local masuk M3; tahap public masuk M4.
+- [x] Typecheck, lint, unit, dan browser integration IndexedDB lulus.
+- [x] Semua P0 lokal pada E2E_TEST_PLAN lulus, termasuk reload, concurrent tabs, fault rollback, dan reset. STK-E20 tahap production-local masuk M3; tahap public masuk M4.
 - [ ] Periksa visual ketiga viewport, zoom 200%, font/kontras, dan reduced motion.
-- [ ] Build produksi dan production E2E pada artifact yang sama lulus.
+- [x] Build produksi dan production E2E pada artifact yang sama lulus.
 - [ ] Core smoke Firefox/WebKit; hasil yang belum teruji dicatat sebagai unverified.
-- [ ] Tidak ada test-only clock/fixture/fault controls yang dapat diakses pada artifact publik.
+- [x] Tidak ada test-only clock/fixture/fault controls yang dapat diakses pada artifact publik.
 - [ ] Tulis docs/VERIFICATION.md dengan command, source/build hash, fixture, dan bukti eksekusi nyata.
 
 Gate: tidak ada P0 lokal gagal/unverified, tidak ada claim financial/live-data palsu, dan batas dukungan browser tercatat. Public smoke masih pending sampai deployment pada M4 tersedia.
@@ -88,4 +88,4 @@ Gate: URL dan source benar-benar publik serta smoke pada deployment yang sama lu
 
 ## Urutan pekerjaan berikutnya
 
-M2 fitur -> M3 verifikasi -> M4 deploy.
+M3 verifikasi (sisa: visual/kontras, Firefox/WebKit, gate CI) -> M4 deploy.

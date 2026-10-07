@@ -1,6 +1,10 @@
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router';
+import { ActivityPage } from '../features/activity/ActivityPage';
+import { AssetsPage } from '../features/assets/AssetsPage';
+import { CalculatorPage } from '../features/calculator/CalculatorPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { PositionsPage } from '../features/positions/PositionsPage';
+import { SettingsPage } from '../features/settings/SettingsPage';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Layout } from './Layout';
 import { AppDataProvider } from './store';
@@ -26,7 +30,11 @@ export function App() {
             <Route element={<Layout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="assets" element={<AssetsPage />} />
+              <Route path="calculator" element={<CalculatorPage />} />
               <Route path="positions" element={<PositionsPage />} />
+              <Route path="activity" element={<ActivityPage />} />
+              <Route path="settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

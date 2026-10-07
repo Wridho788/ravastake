@@ -33,6 +33,7 @@ export function TimeControls() {
   const [actionError, setActionError] = useState('');
   const [confirmDays, setConfirmDays] = useState<number | null>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
+  const submitting = useRef(false);
   const inputId = useId();
   const errorId = useId();
 
@@ -44,6 +45,9 @@ export function TimeControls() {
   }, [advancePrefill]);
 
   async function commit(days: number) {
+    // Guards against a double click before the pending state re-renders.
+    if (submitting.current) return;
+    submitting.current = true;
     setActionError('');
     try {
       await mutate((deps) =>
@@ -53,6 +57,8 @@ export function TimeControls() {
       setNotice(`Waktu simulasi maju ${days} hari.`);
     } catch (error) {
       setActionError(error instanceof DomainError ? error.message : 'Gagal memajukan waktu.');
+    } finally {
+      submitting.current = false;
     }
   }
 
