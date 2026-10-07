@@ -1,6 +1,6 @@
 # Milestones — RavaStake
 
-Tanggal awal: 2026-10-06. **Status saat ini: M0 selesai (revisi spesifikasi 2026-10-07); M1 berjalan.**
+Tanggal awal: 2026-10-06. **Status saat ini: M0 dan M1 selesai (2026-10-07); berikutnya M2.** Bukti run ada di [VERIFICATION](VERIFICATION.md).
 
 Checklist implementasi hanya ditandai setelah deliverable dan bukti terkait benar-benar tersedia. Dokumen ini menjadi sumber status; Development menjelaskan cara menjalankannya.
 
@@ -39,13 +39,13 @@ Gate: PRD, model data, rumus, dan acceptance criteria konsisten; desain mobile/e
 
 ## M1 — Fondasi dan irisan pertama
 
-- [ ] Scaffold React/TypeScript/Vite; kunci versi dan Node engine yang kompatibel.
-- [ ] Workflow CI GitHub Actions untuk semua gate otomatis.
-- [ ] Buat route, layout, design tokens, serta error boundary.
-- [ ] Buat IndexedDB schema, fixture, repository, coordinator, dan hook jam build e2e.
-- [ ] Uji parsing decimal, formula reward, waktu simulasi, seed-once, dan operation idempotency.
-- [ ] Jalankan smoke Playwright sejak awal untuk membuktikan browser/toolchain tersedia.
-- [ ] Buktikan satu alur draft -> active -> majukan waktu -> closed dengan state persisten (E07, E10, E21 jalur utama).
+- [x] Scaffold React/TypeScript/Vite; kunci versi dan Node engine yang kompatibel.
+- [x] Workflow CI GitHub Actions untuk semua gate otomatis (file dibuat; run pertama terjadi setelah push).
+- [x] Buat route, layout, design tokens, serta error boundary.
+- [x] Buat IndexedDB schema, fixture, repository, coordinator, dan hook jam build e2e.
+- [x] Uji parsing decimal, formula reward, waktu simulasi, seed-once, dan operation idempotency.
+- [x] Jalankan smoke Playwright sejak awal untuk membuktikan browser/toolchain tersedia.
+- [x] Buktikan satu alur draft -> active -> majukan waktu -> closed dengan state persisten (E07, E10, E21 jalur utama).
 
 Gate: satu journey lengkap memiliki bukti unit/integration/browser sebelum memperluas dashboard.
 
@@ -88,4 +88,4 @@ Gate: URL dan source benar-benar publik serta smoke pada deployment yang sama lu
 
 ## Urutan pekerjaan berikutnya
 
-M1 bootstrap/storage/smoke/CI -> M2 fitur -> M3 verifikasi -> M4 deploy.
+M2 fitur -> M3 verifikasi -> M4 deploy.
