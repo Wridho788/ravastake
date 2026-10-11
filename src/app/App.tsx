@@ -1,4 +1,5 @@
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router';
+import { Compass } from 'lucide-react';
 import { ActivityPage } from '../features/activity/ActivityPage';
 import { AssetsPage } from '../features/assets/AssetsPage';
 import { CalculatorPage } from '../features/calculator/CalculatorPage';
@@ -11,9 +12,13 @@ import { AppDataProvider } from './store';
 
 function NotFoundPage() {
   return (
-    <section className="panel">
+    <section className="panel panel--highlight not-found">
+      <span className="empty-state__icon" aria-hidden="true">
+        <Compass />
+      </span>
+      <p className="eyebrow">Error 404</p>
       <h1>Halaman tidak ditemukan</h1>
-      <p>Alamat ini bukan bagian dari RavaStake.</p>
+      <p className="muted">Alamat ini bukan bagian dari RavaStake.</p>
       <Link className="button button--primary" to="/dashboard">
         Kembali ke dashboard
       </Link>

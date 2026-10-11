@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Database, RotateCcw } from 'lucide-react';
 import { formatDateTime } from '../../domain/format';
 import { offsetDays } from '../../domain/time';
 import { DomainError } from '../../data/errors';
@@ -26,17 +27,27 @@ export function SettingsPage() {
 
   return (
     <div className="stack">
-      <header className="page-header">
-        <h1>Pengaturan</h1>
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">Pengaturan</p>
+          <h1>Pengaturan</h1>
+        </div>
       </header>
 
       <section className="panel" aria-labelledby="local-data-heading">
-        <h2 id="local-data-heading">Data lokal</h2>
-        <p>
+        <div className="panel__head">
+          <h2 id="local-data-heading">
+            <span className="panel__title-icon" aria-hidden="true">
+              <Database />
+            </span>
+            Data lokal
+          </h2>
+        </div>
+        <p className="muted">
           Semua data RavaStake tersimpan di IndexedDB browser ini saja: tidak ada akun, server, wallet, atau koneksi blockchain. Data
           tidak tersinkron ke perangkat lain, dan menghapus data situs di browser akan menghapusnya.
         </p>
-        <dl className="stats" data-testid="data-status">
+        <dl className="stat-tiles" data-testid="data-status">
           <div>
             <dt>Versi schema</dt>
             <dd>{meta.schemaVersion}</dd>
@@ -56,9 +67,16 @@ export function SettingsPage() {
         </dl>
       </section>
 
-      <section className="panel" aria-labelledby="reset-heading">
-        <h2 id="reset-heading">Reset demo</h2>
-        <p>
+      <section className="panel panel--danger-zone" aria-labelledby="reset-heading">
+        <div className="panel__head">
+          <h2 id="reset-heading">
+            <span className="panel__title-icon" aria-hidden="true">
+              <RotateCcw />
+            </span>
+            Reset demo
+          </h2>
+        </div>
+        <p className="muted">
           Menghapus semua draft, posisi, ledger, aktivitas, dan watchlist, lalu memulihkan fixture awal. Waktu simulasi kembali ke
           waktu nyata.
         </p>

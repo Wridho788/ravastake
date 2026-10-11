@@ -1,12 +1,17 @@
 import { useId, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { Search, SearchX, Star } from 'lucide-react';
 import { formatBps, formatUsdCents } from '../../domain/format';
 import { DomainError } from '../../data/errors';
 import type { AssetView } from '../../data/queries';
 import { toggleWatchlist } from '../../data/useCases';
 import { useAppData, useSnapshot } from '../../app/store';
 import { Amount } from '../../shared/Amount';
+import { AssetIcon } from '../../shared/AssetIcon';
+import { seriesChange } from '../../shared/chartGeometry';
+import { Delta } from '../../shared/Delta';
 import { PriceChart } from '../../shared/PriceChart';
+import { Sparkline } from '../../shared/Sparkline';
 
 type SortKey = 'price-desc' | 'price-asc' | 'apr-desc' | 'apr-asc';
 
@@ -68,15 +73,23 @@ export function AssetsPage() {
 
   return (
     <div className="stack">
-      <header className="page-header">
-        <h1>Aset</h1>
-        <p className="muted">Harga, APR, dan grafik adalah fixture tetap untuk demonstrasi, bukan data pasar.</p>
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">
+            Aset <span className="chip">{snapshot.assets.length} aset</span>
+          </p>
+          <h1>Jelajahi aset</h1>
+          <p className="page-head__lead">Harga, APR, dan grafik adalah fixture tetap untuk demonstrasi, bukan data pasar.</p>
+        </div>
       </header>
 
       <section className="panel toolbar" aria-label="Pencarian dan urutan">
         <div className="field">
           <label htmlFor={ids.search}>Cari aset</label>
-          <input id={ids.search} type="search" placeholder="Simbol atau nama" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <div className="input-icon">
+            <Search aria-hidden="true" />
+            <input id={ids.search} type="search" placeholder="Simbol atau nama" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
         </div>
         <div className="field">
           <label htmlFor={ids.sort}>Urutkan</label>
@@ -104,7 +117,10 @@ export function AssetsPage() {
         <section aria-labelledby="asset-list-heading">
           <h2 id="asset-list-heading">Daftar aset</h2>
           {visible.length === 0 ? (
-            <div className="panel" data-testid="assets-empty">
+            <div className="panel empty-state" data-testid="assets-empty">
+              <span className="empty-state__icon" aria-hidden="true">
+                <SearchX />
+              </span>
               <p>{watchOnly && query.trim() === '' ? 'Watchlist masih kosong.' : 'Tidak ada aset yang cocok.'}</p>
               <button
                 type="button"
@@ -127,20 +143,29 @@ export function AssetsPage() {
                     aria-pressed={view.asset.id === selected?.asset.id}
                     onClick={() => setParams({ asset: view.asset.id }, { replace: true })}
                   >
-                    <span className="asset-row__symbol">{view.asset.symbol}</span>
-                    <span className="muted small">{view.asset.name}</span>
-                    <span className="asset-row__price">{formatUsdCents(BigInt(view.asset.priceUsdCents))}</span>
-                    <span className="pill pill--soft">APR {formatBps(view.provider.aprBps)}</span>
+                    <AssetIcon symbol={view.asset.symbol} />
+                    <span className="asset-row__id">
+                      <span className="asset-row__symbol">{view.asset.symbol}</span>
+                      <span className="muted small">
+                        {view.asset.name} · APR {formatBps(view.provider.aprBps)}
+                      </span>
+                    </span>
+                    <Sparkline className="asset-row__spark" series={view.asset.chart7d} />
+                    <span className="asset-row__figures">
+                      <span className="asset-row__price">{formatUsdCents(BigInt(view.asset.priceUsdCents))}</span>
+                      <Delta ratio={seriesChange(view.asset.chart7d)} period="7H" />
+                    </span>
                   </button>
                   <button
                     type="button"
-                    className={`button button--ghost watch-toggle ${view.watched ? 'watch-toggle--on' : ''}`}
+                    className={`icon-button watch-toggle ${view.watched ? 'watch-toggle--on' : ''}`}
                     aria-pressed={view.watched}
                     aria-label={view.watched ? `Hapus ${view.asset.symbol} dari watchlist` : `Tambah ${view.asset.symbol} ke watchlist`}
+                    title={view.watched ? 'Hapus dari watchlist' : 'Tambah ke watchlist'}
                     disabled={pending}
                     onClick={() => void onToggle(view)}
                   >
-                    {view.watched ? '★' : '☆'}
+                    <Star fill={view.watched ? 'currentColor' : 'none'} />
                   </button>
                 </li>
               ))}
@@ -160,14 +185,18 @@ function AssetDetail({ view }: { view: AssetView }) {
   const series = range === '7d' ? asset.chart7d : asset.chart30d;
   return (
     <section className="panel" aria-labelledby="asset-detail-heading" data-testid="asset-detail">
-      <h2 id="asset-detail-heading">
-        Detail {asset.symbol} <span className="muted small">{asset.name}</span>
-      </h2>
+      <div className="asset-detail__head">
+        <AssetIcon symbol={asset.symbol} size="lg" />
+        <h2 id="asset-detail-heading">
+          Detail {asset.symbol} <span className="muted small">{asset.name}</span>
+        </h2>
+      </div>
+      <p className="panel__eyebrow">Harga fixture</p>
+      <div className="asset-detail__price">
+        <p className="display-number display-number--md">{formatUsdCents(BigInt(asset.priceUsdCents))}</p>
+        <Delta ratio={seriesChange(series)} period={range === '7d' ? '7 hari' : '30 hari'} />
+      </div>
       <dl className="stats">
-        <div>
-          <dt>Harga fixture</dt>
-          <dd>{formatUsdCents(BigInt(asset.priceUsdCents))}</dd>
-        </div>
         <div>
           <dt>APR provider</dt>
           <dd>
