@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useLocation, useSearchParams } from 'react-router';
+import { FastForward, FilePlus2, Pencil, Trash2, Zap } from 'lucide-react';
 import { MAX_NOTE_LENGTH } from '../../domain/constants';
 import { unitsToInputString } from '../../domain/decimal';
 import { formatBps, formatDate } from '../../domain/format';
@@ -19,6 +20,7 @@ import {
 } from '../../data/useCases';
 import { useAppData, useSnapshot } from '../../app/store';
 import { Amount } from '../../shared/Amount';
+import { AssetIcon } from '../../shared/AssetIcon';
 import { Dialog } from '../../shared/Dialog';
 import { XrayButton, XrayDrawer, type XrayTarget } from '../xray/Xray';
 
@@ -55,37 +57,54 @@ export function PositionsPage() {
 
   return (
     <div className="stack">
-      <header className="page-header">
-        <h1>Posisi staking simulasi</h1>
-        <p className="muted">
-          Draft tidak memesan saldo. Aktivasi memindahkan saldo tersedia ke posisi aktif; penutupan mengembalikan principal dan
-          reward per hari penuh.
-        </p>
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">Posisi</p>
+          <h1>Posisi staking simulasi</h1>
+          <p className="page-head__lead">
+            Draft tidak memesan saldo. Aktivasi memindahkan saldo tersedia ke posisi aktif; penutupan mengembalikan principal dan
+            reward per hari penuh.
+          </p>
+        </div>
+        <nav className="status-nav" aria-label="Lompat ke status posisi">
+          <a className="chip-button" href="#status-draft">
+            Draft <span className="count-badge">{drafts.length}</span>
+          </a>
+          <a className="chip-button" href="#status-aktif">
+            Aktif <span className="count-badge">{active.length}</span>
+          </a>
+          <a className="chip-button" href="#status-ditutup">
+            Ditutup <span className="count-badge">{closed.length}</span>
+          </a>
+        </nav>
       </header>
 
       <CreateDraftForm />
 
-      <PositionSection title="Draft" emptyText="Belum ada draft." items={drafts} onXray={setXray}>
+      <PositionSection id="status-draft" title="Draft" emptyText="Belum ada draft." items={drafts} onXray={setXray}>
         {(view) => (
           <div className="card__actions">
             <button type="button" className="button button--primary" onClick={() => setActivatingId(view.position.id)}>
+              <Zap />
               Aktifkan
             </button>
             <button type="button" className="button button--ghost" onClick={() => setEditingId(view.position.id)}>
+              <Pencil />
               Edit
             </button>
             <button type="button" className="button button--ghost" onClick={() => setDeletingId(view.position.id)}>
+              <Trash2 />
               Hapus
             </button>
           </div>
         )}
       </PositionSection>
 
-      <PositionSection title="Aktif" emptyText="Belum ada posisi aktif." items={active} onXray={setXray}>
+      <PositionSection id="status-aktif" title="Aktif" emptyText="Belum ada posisi aktif." items={active} onXray={setXray}>
         {(view) => <ActiveActions view={view} onClose={() => setClosingId(view.position.id)} />}
       </PositionSection>
 
-      <PositionSection title="Ditutup" emptyText="Belum ada posisi yang ditutup." items={closed} onXray={setXray} />
+      <PositionSection id="status-ditutup" title="Ditutup" emptyText="Belum ada posisi yang ditutup." items={closed} onXray={setXray} />
 
       {activatingId ? <ActivateDialog positionId={activatingId} onDone={() => setActivatingId(null)} /> : null}
       {closingId ? <CloseDialog positionId={closingId} onDone={() => setClosingId(null)} /> : null}
@@ -197,11 +216,19 @@ function CreateDraftForm() {
   }
 
   return (
-    <section className="panel" aria-labelledby="draft-form-heading">
-      <h2 id="draft-form-heading">Buat draft</h2>
+    <section id="buat-draft" className="panel" aria-labelledby="draft-form-heading" tabIndex={-1}>
+      <div className="panel__head">
+        <h2 id="draft-form-heading">
+          <span className="panel__title-icon" aria-hidden="true">
+            <FilePlus2 />
+          </span>
+          Buat draft
+        </h2>
+      </div>
       <form className="form-grid" onSubmit={onSubmit} noValidate>
         <DraftFields value={value} onChange={setValue} errors={errors} />
-        <div className="field field--wide">
+        <div className="field field--wide draft-form__foot">
+          <p className="hint">Draft tidak memesan saldo sampai diaktifkan.</p>
           <button type="submit" className="button button--primary" disabled={pending}>
             Simpan draft
           </button>
@@ -280,12 +307,14 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 // ---------------------------------------------------------------------------
 
 function PositionSection({
+  id,
   title,
   emptyText,
   items,
   onXray,
   children,
 }: {
+  id: string;
   title: string;
   emptyText: string;
   items: PositionView[];
@@ -294,9 +323,9 @@ function PositionSection({
 }) {
   const headingId = useId();
   return (
-    <section aria-labelledby={headingId}>
+    <section id={id} className="position-section" aria-labelledby={headingId} tabIndex={-1}>
       <h2 id={headingId}>
-        {title} <span className="muted small">({items.length})</span>
+        {title} <span className="count-badge">{items.length}</span>
       </h2>
       {items.length === 0 ? (
         <p className="muted">{emptyText}</p>
@@ -323,12 +352,34 @@ function PositionSummary({ view, onXray }: { view: PositionView; onXray: (target
   return (
     <>
       <div className="card__head">
-        <h3>
-          <Amount units={principal} symbol={asset.symbol} testId="principal" />
-          {position.status !== 'draft' ? <XrayButton label={`principal posisi ${asset.symbol}`} onOpen={openXray} /> : null}
+        <h3 className="card__title">
+          <AssetIcon symbol={asset.symbol} size="sm" />
+          <span>
+            <Amount units={principal} symbol={asset.symbol} testId="principal" />
+            {position.status !== 'draft' ? <XrayButton label={`principal posisi ${asset.symbol}`} onOpen={openXray} /> : null}
+          </span>
         </h3>
         <span className={`pill pill--status-${position.status}`}>{STATUS_LABEL[position.status]}</span>
       </div>
+      {position.status === 'active' ? (
+        <div className="position-card__progress">
+          <div className="position-card__progress-label" aria-hidden="true">
+            <span>Progres</span>
+            <span>{Math.round((view.elapsedDays / position.durationDays) * 100)}%</span>
+          </div>
+          <div
+            className="progress"
+            role="progressbar"
+            aria-label={`Progres posisi ${asset.symbol}`}
+            aria-valuemin={0}
+            aria-valuemax={position.durationDays}
+            aria-valuenow={view.elapsedDays}
+            aria-valuetext={`Hari ${view.elapsedDays} dari ${position.durationDays}`}
+          >
+            <span className="progress__fill" style={{ width: `${(view.elapsedDays / position.durationDays) * 100}%` }} />
+          </div>
+        </div>
+      ) : null}
       <dl className="stats">
         <div>
           <dt>Durasi</dt>
@@ -379,16 +430,24 @@ function ActiveActions({ view, onClose }: { view: PositionView; onClose: () => v
       <button type="button" className="button button--primary" onClick={onClose}>
         Tutup posisi
       </button>
-      <button
-        type="button"
-        className="button button--ghost"
-        disabled={remaining === 0}
-        onClick={() => requestAdvancePrefill(remaining)}
-        title={remaining === 0 ? undefined : `Isi "Majukan N hari" dengan ${remaining} hari`}
-      >
-        {remaining === 0 ? 'Sudah jatuh tempo' : 'Lompat ke jatuh tempo'}
-      </button>
+      <JumpToMaturityButton remaining={remaining} onJump={() => requestAdvancePrefill(remaining)} />
     </div>
+  );
+}
+
+/** Prefills "Majukan N hari" with the days left (DESIGN_SPEC "Lompat ke jatuh tempo"). */
+export function JumpToMaturityButton({ remaining, onJump }: { remaining: number; onJump: () => void }) {
+  return (
+    <button
+      type="button"
+      className="button button--ghost"
+      disabled={remaining === 0}
+      onClick={onJump}
+      title={remaining === 0 ? undefined : `Isi "Majukan N hari" dengan ${remaining} hari`}
+    >
+      <FastForward />
+      {remaining === 0 ? 'Sudah jatuh tempo' : 'Lompat ke jatuh tempo'}
+    </button>
   );
 }
 
@@ -520,7 +579,8 @@ function ActivateDialog({ positionId, onDone }: { positionId: string; onDone: ()
   );
 }
 
-function CloseDialog({ positionId, onDone }: { positionId: string; onDone: () => void }) {
+/** Also opened from the dashboard's active-position panel. */
+export function CloseDialog({ positionId, onDone }: { positionId: string; onDone: () => void }) {
   const live = useSnapshot();
   const [frozen, refreeze] = useFrozenSnapshot();
   const { mutate, pending, setNotice } = useAppData();

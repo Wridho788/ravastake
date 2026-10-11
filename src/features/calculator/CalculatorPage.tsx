@@ -1,16 +1,27 @@
 import { useId, useState } from 'react';
+import { Calculator } from 'lucide-react';
 import { MAX_DURATION_DAYS, MAX_PRINCIPAL_UNITS, MIN_DURATION_DAYS } from '../../domain/constants';
 import { parsePercentToBps, parseUnits, parseWholeDays } from '../../domain/decimal';
 import { formatBps, formatUsdCents } from '../../domain/format';
 import { rewardUnits, usdCents } from '../../domain/reward';
 import { useSnapshot } from '../../app/store';
 import { Amount } from '../../shared/Amount';
+import { AssetIcon } from '../../shared/AssetIcon';
+import { TickSlider } from '../../shared/TickSlider';
 
 function percentInput(bps: number): string {
   const whole = Math.trunc(bps / 100);
   const frac = bps % 100;
   return frac === 0 ? String(whole) : `${whole},${String(frac).padStart(2, '0').replace(/0$/, '')}`;
 }
+
+/** Common durations, like the reference's month presets. */
+const PRESETS = [
+  { days: 30, label: '1 bln' },
+  { days: 90, label: '3 bln' },
+  { days: 180, label: '6 bln' },
+  { days: 365, label: '1 thn' },
+] as const;
 
 /** Pure estimate (STK-04): never writes to the ledger or positions. */
 export function CalculatorPage() {
@@ -39,17 +50,27 @@ export function CalculatorPage() {
 
   return (
     <div className="stack">
-      <header className="page-header">
-        <h1>Kalkulator reward</h1>
-        <p className="muted">
-          Simple interest tanpa compounding, biaya, atau perubahan harga. Kalkulator tidak menyimpan apa pun dan tidak mengubah
-          saldo atau posisi.
-        </p>
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">Kalkulator</p>
+          <h1>Kalkulator reward</h1>
+          <p className="page-head__lead">
+            Simple interest tanpa compounding, biaya, atau perubahan harga. Kalkulator tidak menyimpan apa pun dan tidak mengubah
+            saldo atau posisi.
+          </p>
+        </div>
       </header>
 
-      <div className="split">
+      <div className="split split--calc">
         <section className="panel" aria-labelledby="calc-input-heading">
-          <h2 id="calc-input-heading">Input</h2>
+          <div className="panel__head">
+            <h2 id="calc-input-heading">
+              <span className="panel__title-icon" aria-hidden="true">
+                <Calculator />
+              </span>
+              Input
+            </h2>
+          </div>
           <form className="form-grid" onSubmit={(e) => e.preventDefault()} noValidate>
             <div className="field">
               <label htmlFor={ids.asset}>Aset</label>
@@ -97,44 +118,77 @@ export function CalculatorPage() {
             <div className="field">
               <label htmlFor={ids.days}>Hari (1–365)</label>
               <input id={ids.days} inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} {...errorFor(daysResult, ids.days)} />
-              <label htmlFor={ids.slider} className="visually-hidden">
-                Hari (slider)
-              </label>
-              <input
-                id={ids.slider}
-                type="range"
-                min={MIN_DURATION_DAYS}
-                max={MAX_DURATION_DAYS}
-                step={1}
-                value={sliderValue}
-                onChange={(e) => setDays(e.target.value)}
-                aria-valuetext={`${sliderValue} hari`}
-              />
               {!daysResult.ok ? (
                 <p id={`${ids.days}-error`} className="field-error" role="alert">
                   {daysResult.message}
                 </p>
               ) : null}
             </div>
+            <div className="field field--wide calc-days">
+              <label htmlFor={ids.slider} className="visually-hidden">
+                Hari (slider)
+              </label>
+              <TickSlider
+                min={MIN_DURATION_DAYS}
+                max={MAX_DURATION_DAYS}
+                value={sliderValue}
+                bubble={`${sliderValue} hari`}
+                scale={[`${MIN_DURATION_DAYS} hari`, `${MAX_DURATION_DAYS} hari`]}
+                input={{ id: ids.slider, onChange: (value) => setDays(String(value)), valueText: `${sliderValue} hari` }}
+              />
+              <div className="chip-group" role="group" aria-label="Durasi cepat">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.days}
+                    type="button"
+                    className="chip-button"
+                    aria-pressed={daysResult.ok && daysResult.value === preset.days}
+                    onClick={() => setDays(String(preset.days))}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </form>
         </section>
 
-        <section className="panel panel--highlight" aria-labelledby="calc-result-heading" aria-live="polite">
-          <h2 id="calc-result-heading">Hasil estimasi</h2>
+        <section className="panel panel--highlight calc-result" aria-labelledby="calc-result-heading" aria-live="polite">
+          <div className="panel__head">
+            <h2 id="calc-result-heading">Hasil estimasi</h2>
+            {view ? <AssetIcon symbol={view.asset.symbol} /> : null}
+          </div>
           {reward !== null && principalResult.ok && aprResult.ok && daysResult.ok && view ? (
             <>
-              <p className="big-number">
-                <Amount units={reward} symbol={symbol} testId="calc-reward" />
-              </p>
-              <p className="muted">≈ {formatUsdCents(usdCents(reward, view.asset.priceUsdCents))} pada harga fixture</p>
+              <div className="calc-result__value">
+                <p className="panel__eyebrow">Reward setelah {daysResult.value} hari</p>
+                <p className="display-number">
+                  <Amount units={reward} symbol={symbol} testId="calc-reward" />
+                </p>
+                <p className="muted">≈ {formatUsdCents(usdCents(reward, view.asset.priceUsdCents))} pada harga fixture</p>
+              </div>
+              <ul className="mini-stats">
+                <li className="mini-stat">
+                  <span className="mini-stat__head">Principal</span>
+                  <p className="mini-stat__value">
+                    <Amount units={principalResult.value} symbol={symbol} />
+                  </p>
+                </li>
+                <li className="mini-stat">
+                  <span className="mini-stat__head">APR</span>
+                  <p className="mini-stat__value">{formatBps(aprResult.value)}</p>
+                </li>
+              </ul>
               <p className="formula" data-testid="calc-formula">
                 floor({principalResult.value.toString()} unit × {aprResult.value} bps × {daysResult.value} hari ÷ 3.650.000) ={' '}
                 {reward.toString()} unit
               </p>
-              <p className="muted small">
-                Posisi sungguhan memakai APR provider saat aktivasi ({formatBps(view.provider.aprBps)}), bukan APR bebas di sini.
-                Reward dibulatkan ke bawah ke 8 desimal.
-              </p>
+              <ul className="assumptions">
+                <li>
+                  Posisi sungguhan memakai APR provider saat aktivasi ({formatBps(view.provider.aprBps)}), bukan APR bebas di sini.
+                </li>
+                <li>Reward dibulatkan ke bawah ke 8 desimal.</li>
+              </ul>
             </>
           ) : (
             <p className="muted" data-testid="calc-invalid">

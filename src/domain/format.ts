@@ -4,6 +4,13 @@ import { unitsToDecimalString } from './decimal';
 const unitFormatter = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 8 });
 const usdFormatter = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const percentFormatter = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 2 });
+const signedPercentFormatter = new Intl.NumberFormat(LOCALE, {
+  style: 'percent',
+  signDisplay: 'exceptZero',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+const sharePercentFormatter = new Intl.NumberFormat(LOCALE, { style: 'percent', maximumFractionDigits: 1 });
 const dateFormatter = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' });
 const dateTimeFormatter = new Intl.DateTimeFormat(LOCALE, {
   day: 'numeric',
@@ -32,6 +39,23 @@ export function formatUsdCents(cents: bigint): string {
   const abs = negative ? -cents : cents;
   const str = `${negative ? '-' : ''}${abs / 100n}.${(abs % 100n).toString().padStart(2, '0')}`;
   return usdFormatter.format(str as NumericString);
+}
+
+/** USD cents with an explicit sign for changes, e.g. "+US$12,34". */
+export function formatSignedUsdCents(cents: bigint): string {
+  return `${cents > 0n ? '+' : ''}${formatUsdCents(cents)}`;
+}
+
+/**
+ * Display-only ratios (chart change, allocation share). Never used for balances or rewards,
+ * which stay exact BigInt units.
+ */
+export function formatSignedPercent(ratio: number): string {
+  return signedPercentFormatter.format(ratio);
+}
+
+export function formatSharePercent(ratio: number): string {
+  return sharePercentFormatter.format(ratio);
 }
 
 export function formatBps(bps: number): string {

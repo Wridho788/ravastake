@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ScanSearch } from 'lucide-react';
 import { formatBps, formatDateTime } from '../../domain/format';
 import type { LedgerEntry, Position } from '../../domain/types';
 import { DomainError } from '../../data/errors';
@@ -35,6 +36,7 @@ function title(target: XrayTarget): string {
 export function XrayButton({ label, onOpen }: { label: string; onOpen: () => void }) {
   return (
     <button type="button" className="xray-button" onClick={onOpen} aria-label={`X-ray ${label}`} title="Lihat entri ledger">
+      <ScanSearch size={13} />
       X-ray
     </button>
   );
